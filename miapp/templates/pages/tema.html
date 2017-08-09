@@ -1,0 +1,40 @@
+{% extends "pages/richtextpage.html" %}
+{% block main %}
+
+<!--
+This template is provided as a custom template for the homepage, for
+when it is configured as an editable page in the navigation tree. Feel
+free to modify it.
+-->
+
+{% load pages_tags %}
+{% load have_tags %}
+
+<h1>{{ page.author.title }}</h1>
+{% page_menu page "pages/primario.html" %}
+{% if user.is_authenticated %}
+{% if user.is_superuser %}
+  <button class="save btn btn-default" id="boton_tema"><span class="glyphicon glyphicon-plus"></span> Crear Tema</button>
+{% endif %}
+{% if not page_branch|have:"tema" %}
+  <button class="save btn btn-default" id="boton_expe"><span class="glyphicon glyphicon-plus"></span> Crear Experimento</button>
+{% endif %}
+<br></br>
+{% if user.is_superuser %}
+  <div id="form_tema" style="display: none;">
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ temaForm.as_p }}
+    <button type="submit" class="save btn btn-default" name="btCrearTema">Crear</button>
+  </form>
+  </div>
+{% endif %}
+<div id="form_expe" style="display: none;">
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ expeForm.as_p }}
+  <button type="submit" class="save btn btn-default" name="btCrearExpe">Crear</button>
+</form>
+</div>
+{% endif %}
+{% endblock %}

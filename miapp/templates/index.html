@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block meta_title %}{% trans "Home" %}{% endblock %}
+{% block title %}{% trans "Home" %}{% endblock %}
+
+{% block breadcrumb_menu %}
+<li class="active">{% trans "Home" %}</li>
+{% endblock %}
+
+{% load pages_tags %}
+
+{% block main %}
+
+{% blocktrans %}
+<h2>¡Experimentos de ciencia!</h2>
+<br>
+<p> Bienvenido, en esta página encontrarás diferentes guías para
+la realización de experimentos de ciencia de bajo coste, de fácil
+realización e interesantes para tus estudiantes.
+</p>
+<br>
+{% endblocktrans %}
+{% page_menu "pages/primario.html" %}
+{% endblock %}

@@ -1,0 +1,16 @@
+.comentario-form textarea{
+  width: 90%;
+}
+
+.edicion_revision {
+  float: right;
+  font-size: 120%;
+}
+
+#btns-edit-expe {
+  font-size: 180%;
+}
+
+#p-revision-texto {
+  width: 99%;
+}

@@ -1,0 +1,167 @@
+{% extends "pages/richtextpage.html" %}
+{% load staticfiles %}
+{% block main %}
+
+<!--
+This template is provided as a custom template for the homepage, for
+when it is configured as an editable page in the navigation tree. Feel
+free to modify it.
+-->
+
+{% load pages_tags %}
+{% load have_tags %}
+
+
+<div id="todo_el_contenido">
+  {% if user == page.experimento.autor or user.is_superuser %}
+    <div id="btns-edit-expe" class="nav pull-right">
+      <a id="boton_edit_expe" title="Editar"><span class="glyphicon glyphicon-edit"></span></a>
+      <a data-toggle="modal" data-target="#ModalBorrarExperimento" title="Borrar"><span class="glyphicon glyphicon-remove"></span></a>
+    </div>
+  {% endif %}
+  <div id="contenido_expe">
+    <h1>{{ page.title }}</h1>
+    <p>Por {{page.experimento.autor}}
+      {%if page.experimento.autor.is_superuser %}(Admin){% endif %}
+      &nbsp;&nbsp;{{ page.publish_date|date:"j F, Y, G:i" }}
+      {% if page.publish_date|date:"jFYGi" != page.updated|date:"jFYGi" %}
+        &nbsp;&nbsp;(Editado el {{ page.updated|date:"j F, Y, G:i" }} )
+      {% endif %}
+    </p>
+    {{ page.experimento.texto|safe }}
+  </div>
+  <hr>
+
+  {% if user == page.experimento.autor or user.is_superuser %}
+    <div id="form_editar_expe" style="display: none;">
+      <form method="POST" enctype="multipart/form-data" name="form_editar">
+        {% csrf_token %}
+        {{ form_edit_expe.as_p }}
+        <button type="button" class="save btn btn-default" id="boton_cancel_edit_expe">Cancelar</button>
+        <button type="submit" class="save btn btn-default" name="btEditExpe">Guardar</button>
+      </form>
+    </div>
+  {% endif %}
+
+  <h3>Revisiones</h3>
+  {% if nota_prom != 0 %}Calificación Promedio: {{nota_prom}}{% endif %}
+
+  {% if user.is_authenticated and not reviso_expe and user != page.experimento.autor %}
+    <hr>
+    <div id="form_revision">
+      <form method="POST" class="comentario-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form_revision.as_p }}
+        <button type="submit" class="save btn btn-default" name="btcreateRev">Enviar</button>
+      </form>
+    </div>
+  {% endif %}
+  <br></br>
+  {% for revision in revisiones %}
+    {% if user == revision.author or user.is_superuser %}
+      <!--si, esto es feo, pero es temporal-->
+      <script>
+        $(document).ready(function(){
+          $("#a-edit-r-{{ revision.author }}").click(function(){
+            $("#form_edit_revision_{{revision.author}}").show();
+            $("#revision{{ revision.author }}").hide();
+          });
+          $("#bt_cancel_edit_rev_{{revision.author}}").click(function(){
+            $("#form_edit_revision_{{revision.author}}").hide();
+            $("#revision{{ revision.author }}").show();
+          });
+        });
+      </script>
+
+      <div id="form_edit_revision_{{revision.author}}" style="display: none;">
+        <form method="POST" class="comentario-form" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% for field in revision|rellenarRevisionForm:user %}
+              <div class="fieldWrapper">
+                  {{ field.errors }}
+                  {{ field.label_tag }}: {{ field }}
+              </div>
+          {% endfor %}
+          <button type="button" class="save btn btn-default" id="bt_cancel_edit_rev_{{revision.author}}">Cancelar</button>
+          <button type="submit" class="save btn btn-default" name="btEditRev" value="{{revision.author}}">Enviar</button>
+        </form>
+      </div>
+
+
+      <!-- Modal -->
+      <div class="modal fade" id="ModalBorrarRev{{revision.author}}" role="dialog" align="center">
+        <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-body">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <p></p>
+              <h3>¿Realmente deseas eliminar esta revisión?</h3>
+              <br></br>
+              <p> Ten en cuenta que se eliminara de forma permanente el comentario, la calificación y el tiempo utilizado.</p>
+              <p>Para borrar esta revisión selecciona <b>Sí</b> a continuación:</p>
+              <br></br>
+              <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form_del_rev }}<br>
+                <button type="submit" class="save btn btn-danger" name="btBorrarRev" value="{{revision.author}}">Enviar</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    {% endif %}
+    <div id="revision{{ revision.author }}">
+      {% if user == revision.author or user.is_superuser %}
+        <div class="edicion_revision">
+          <a id="a-edit-r-{{ revision.author }}" title="Editar"><span class="glyphicon glyphicon-edit"></span></a>
+          <a data-toggle="modal" data-target="#ModalBorrarRev{{revision.author}}" title="Borrar"><span class="glyphicon glyphicon-remove"></span></a>
+        </div>
+      {% endif %}
+      <p><b> {{ revision.author }} </b>
+      {%if revision.author.is_superuser %} (Admin) {% endif %}
+      &nbsp;&nbsp;{{ revision.pub_date|date:"M j, Y, G:i" }}
+      {% if revision.pub_date|date:"jFYGi" != revision.mod_date|date:"jFYGi" %}
+        &nbsp;&nbsp;(Editado el {{ revision.mod_date|date:"j F, Y, G:i" }})
+      {% endif %}
+      </p>
+      <p id="p-revision-texto">{{ revision.body_text|linebreaksbr }}</p>
+      <p>  Calificacion: {{ revision.rating }} &nbsp;&nbsp;
+      Tiempo Utilizado (h:m): {{revision.tiempo|date:" G:i"}} </p>
+    </div>
+    <br>
+  {% endfor %}
+</div>
+<br></br>
+
+{% if user == page.experimento.autor or user.is_superuser %}
+  <!-- Modal -->
+  <div class="modal fade" id="ModalBorrarExperimento" role="dialog" align="center">
+    <div class="modal-dialog">
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-body">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h3>¿Realmente deseas eliminar el experimento?</h3>
+          <br></br>
+          <p> Ten en cuenta que se eliminara de forma permanente, tambien se
+            eliminaran las reseñas y las calificaciones asociadas a este experimento.
+          </p>
+          <p>Para borrar el experimento escribe <b>borrar</b> en el siguiente cuadro:</p>
+          <br></br>
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form_delete_expe }}
+            <button type="submit" class="save btn btn-danger" name="btBorrarExp">Enviar</button>
+          </form>
+          <br></br>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{{ block.super }}
+{% endblock %}
